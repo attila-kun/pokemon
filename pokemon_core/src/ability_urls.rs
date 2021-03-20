@@ -20,9 +20,8 @@ struct PokemonJson {
 pub async fn get_pokemon_ability_urls(pokemon_name: &str) -> Result<Vec<String>, ()> {
 
     let api_base_url = url::Url::parse("https://pokeapi.co/api/v2/pokemon/").unwrap();
-    let api_url_result = api_base_url.join(pokemon_name);
 
-    let api_url = match api_url_result {
+    let api_url = match api_base_url.join(pokemon_name) {
         Ok(url) => url.to_string(),
         Err(_) => {
             eprint!("Error creating API URL for Pokemon: {}", pokemon_name);

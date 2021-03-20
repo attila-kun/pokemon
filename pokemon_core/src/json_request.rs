@@ -1,10 +1,9 @@
 use actix_web::client::Client;
-use serde::{Deserialize};
 use serde_json;
 
 pub async fn get_json_response<T: serde::de::DeserializeOwned>(url: &str) -> Result<T, ()> {
 
-  let mut client = Client::default();
+  let client = Client::default();
   let initial_response = client.get(url)
       .header("User-Agent", "actix-web/3.3.2")
       .send()

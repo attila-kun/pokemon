@@ -23,7 +23,7 @@ impl JsonRequest for NetworkJsonRequest {
         let body_response = match initial_response {
             Ok(mut response) => response.body().await,
             Err(_) => {
-                eprint!("Error requesting URL: {}", url);
+                eprintln!("Error requesting URL: {}", url);
                 return Err(());
             }
         };
@@ -31,15 +31,15 @@ impl JsonRequest for NetworkJsonRequest {
         let body_utf8_parse_result = match body_response {
             Ok(body_response_bytes) => String::from_utf8(body_response_bytes.to_vec()),
             Err(_) => {
-                eprint!("Error while receiving body for URL: {}", url);
+                eprintln!("Error while receiving body for URL: {}", url);
                 return Err(());
             }
         };
 
-        let pokemon_json_parse_result: serde_json::Result<T> = match body_utf8_parse_result {
-            Ok(body_utf8_string) => serde_json::from_str(&body_utf8_string),
+        let (body_utf8_string, pokemon_json_parse_result): (String, serde_json::Result<T>) = match body_utf8_parse_result {
+            Ok(body_utf8_string) => (body_utf8_string.clone(), serde_json::from_str(&body_utf8_string)),
             Err(_) => {
-                eprint!("Error while parsing body into UTF8 string for URL: {}", url);
+                eprintln!("Error while parsing body into UTF8 string for URL: {}", url);
                 return Err(());
             }
         };
@@ -47,7 +47,7 @@ impl JsonRequest for NetworkJsonRequest {
         match pokemon_json_parse_result {
             Ok(pokemon_json) => Ok(pokemon_json),
             Err(error) => {
-                eprint!("Error while parsing UTF8 string into JSON for URL: {}. Error: {}", url, error.to_string());
+                eprintln!("Error while parsing UTF8 string into JSON for URL: {}.\n\tError: {}.\n\tBody string: {}", url, error.to_string(), body_utf8_string);
                 return Err(());
             }
         }

@@ -1,4 +1,5 @@
 use actix_web::{Result, get, web};
+use actix_web::error::ErrorInternalServerError;
 use pokemon_core::get_shakespearean_description;
 use serde::{Serialize, Deserialize};
 
@@ -11,10 +12,17 @@ pub struct PokemonResponse {
 #[get("/pokemon/{name}")]
 async fn pokemon(info: web::Path<String>) -> Result<web::Json<PokemonResponse>> {
     let pokemon_name = &info.0;
-    Ok(web::Json(PokemonResponse {
-        name: String::from(pokemon_name),
-        description: get_shakespearean_description(String::from(pokemon_name)).await
-    }))
+    let result = get_shakespearean_description(pokemon_name).await;
+    match result {
+        Ok(description) => Ok(web::Json(
+            PokemonResponse {
+                name: String::from(pokemon_name),
+                description: description
+            }
+        )),
+        Err(_) => Err(ErrorInternalServerError("Error while generating Shakespearean description."))
+    }
+
 }
 
 // This is to aid testing in a real-life scenario where more than one services are set up.

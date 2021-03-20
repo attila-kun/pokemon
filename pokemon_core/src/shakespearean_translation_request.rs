@@ -54,7 +54,6 @@ impl JsonRequest for MockJsonRequest {
             }
         }
         ";
-        println!("URL: {}", request_url);
 
         let url = url::Url::parse(request_url).unwrap();
         let mut query_pairs = url.query_pairs();

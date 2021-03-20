@@ -39,3 +39,88 @@ pub async fn get_species_description<R: JsonRequest>(specis_url: &str) -> Result
     Err(_) => Err(())
   }
 }
+
+mod tests {
+  use crate::json_request::JsonRequest;
+  use super::*;
+  use async_trait::async_trait;
+  use std::borrow::Cow;
+  use url;
+
+  struct MockJsonRequest;
+
+  #[async_trait(?Send)]
+  impl JsonRequest for MockJsonRequest {
+      async fn get_json_response<T: serde::de::DeserializeOwned>(request_url: &str) -> Result<T, ()> {
+          let json_text = "
+          {
+            \"flavor_text_entries\": [
+              {
+                \"flavor_text\": \"CHARIZARD flies around the sky in\\nsearch of powerful opponents.\\nIt breathes fire of such great heat\\fthat it melts anything. However, it\\nnever turns its fiery breath on any\\nopponent weaker than itself.\",
+                \"language\": {
+                  \"name\": \"en\",
+                  \"url\": \"https://pokeapi.co/api/v2/language/9/\"
+                },
+                \"version\": {
+                  \"name\": \"sapphire\",
+                  \"url\": \"https://pokeapi.co/api/v2/version/8/\"
+                }
+              },
+              {
+                \"flavor_text\": \"Charizard se dedica a volar por los cielos en busca de\\noponentes fuertes. Echa fuego por la boca y es capaz de\\nderretir cualquier cosa. No obstante, si su rival es más débil\\nque él, no usará este ataque.\",
+                \"language\": {
+                  \"name\": \"es\",
+                  \"url\": \"https://pokeapi.co/api/v2/language/7/\"
+                },
+                \"version\": {
+                  \"name\": \"emerald\",
+                  \"url\": \"https://pokeapi.co/api/v2/version/26/\"
+                }
+              },
+              {
+                \"flavor_text\": \"A CHARIZARD flies about in search of\\nstrong opponents. It breathes intense\\nflames that can melt any material. However,\\nit will never torch a weaker foe.\",
+                \"language\": {
+                  \"name\": \"en\",
+                  \"url\": \"https://pokeapi.co/api/v2/language/9/\"
+                },
+                \"version\": {
+                  \"name\": \"emerald\",
+                  \"url\": \"https://pokeapi.co/api/v2/version/9/\"
+                }
+              }
+            ]
+          }
+          ";
+
+          Ok(serde_json::from_str(&json_text).unwrap())
+      }
+  }
+
+  struct MockFailedJsonRequest;
+
+  #[async_trait(?Send)]
+  impl JsonRequest for MockFailedJsonRequest {
+      async fn get_json_response<T: serde::de::DeserializeOwned>(request_url: &str) -> Result<T, ()> {
+          Err(())
+      }
+  }
+
+  #[actix_rt::test]
+  async fn test_returns_first_english_emerald_description_from_json_response() {
+    let description_result = get_species_description::<MockJsonRequest>("https://pokeapi.co/api/v2/pokemon/charizard").await;
+    match description_result {
+      Ok(description) => assert_eq!(description, "A CHARIZARD flies about in search of\nstrong opponents. It breathes intense\nflames that can melt any material. However,\nit will never torch a weaker foe."),
+      Err(_) => assert!(false)
+    }
+  }
+
+  #[actix_rt::test]
+  async fn test_returns_err_if_json_request_fails() {
+    let description_result = get_species_description::<MockFailedJsonRequest>("https://pokeapi.co/api/v2/pokemon/charizard").await;
+    match description_result {
+      Ok(_) => assert!(false),
+      Err(_) => assert!(true)
+    }
+  }
+
+}

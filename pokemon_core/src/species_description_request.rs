@@ -43,6 +43,7 @@ pub async fn get_species_description<R: JsonRequest>(species_url: &str) -> Resul
 mod tests {
   use super::*;
   use async_trait::async_trait;
+  use crate::json_request;
 
   struct MockJsonRequest;
 
@@ -93,18 +94,9 @@ mod tests {
       }
   }
 
-  struct MockFailedJsonRequest;
-
-  #[async_trait(?Send)]
-  impl JsonRequest for MockFailedJsonRequest {
-      async fn get_json_response<T: serde::de::DeserializeOwned>(_request_url: &str) -> Result<T, ()> {
-          Err(())
-      }
-  }
-
   #[actix_rt::test]
   async fn test_returns_first_english_emerald_description_from_json_response() {
-    let description_result = get_species_description::<MockJsonRequest>("https://pokeapi.co/api/v2/pokemon/charizard").await;
+    let description_result = get_species_description::<MockJsonRequest>("Mock Pokemon species URL").await;
     match description_result {
       Ok(description) => assert_eq!(description, "A CHARIZARD flies about in search of\nstrong opponents. It breathes intense\nflames that can melt any material. However,\nit will never torch a weaker foe."),
       Err(_) => assert!(false)
@@ -113,7 +105,7 @@ mod tests {
 
   #[actix_rt::test]
   async fn test_returns_err_if_json_request_fails() {
-    let description_result = get_species_description::<MockFailedJsonRequest>("https://pokeapi.co/api/v2/pokemon/charizard").await;
+    let description_result = get_species_description::<json_request::test_helper::MockFailedJsonRequest>("https://pokeapi.co/api/v2/pokemon/charizard").await;
     match description_result {
       Ok(_) => assert!(false),
       Err(_) => assert!(true)

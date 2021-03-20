@@ -34,6 +34,7 @@ pub async fn get_shakespearean_translation<R: JsonRequest>(text: &str) -> Result
 mod tests {
   use super::*;
   use async_trait::async_trait;
+  use crate::json_request;
   use std::borrow::Cow;
   use url;
 
@@ -70,6 +71,15 @@ impl JsonRequest for MockJsonRequest {
     match translation_result {
       Ok(translation) => assert_eq!(translation, "Thee did giveth mr. Tim a hearty meal, but unfortunately what he did doth englut did maketh him kicketh the bucket."),
       Err(_) => assert!(false)
+    }
+  }
+
+  #[actix_rt::test]
+  async fn test_returns_err_if_json_request_fails() {
+    let description_result = get_shakespearean_translation::<json_request::test_helper::MockFailedJsonRequest>("First line \n second line").await;
+    match description_result {
+      Ok(_) => assert!(false),
+      Err(_) => assert!(true)
     }
   }
 

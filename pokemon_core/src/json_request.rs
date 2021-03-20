@@ -53,3 +53,15 @@ impl JsonRequest for NetworkJsonRequest {
         }
     }
 }
+
+pub mod test_helper {
+    use super::*;
+    pub struct MockFailedJsonRequest;
+
+    #[async_trait(?Send)]
+    impl JsonRequest for MockFailedJsonRequest {
+        async fn get_json_response<T: serde::de::DeserializeOwned>(_request_url: &str) -> Result<T, ()> {
+            Err(()) // useful for testing the behaviour of services whose network request fails
+        }
+    }
+}

@@ -7,23 +7,29 @@ struct Language {
 }
 
 #[derive(Deserialize)]
-struct FlavorTextEntry {
-  flavor_text: String,
-  language: Language
+struct Version {
+  name: String,
 }
 
 #[derive(Deserialize)]
-struct AbilitiesJson {
+struct FlavorTextEntry {
+  flavor_text: String,
+  language: Language,
+  version: Version
+}
+
+#[derive(Deserialize)]
+struct SpeciesJson {
   flavor_text_entries: Vec<FlavorTextEntry>
 }
 
-pub async fn get_ability_description(ability_url: &str) -> Result<String, ()> {
+pub async fn get_species_description(ability_url: &str) -> Result<String, ()> {
 
-  match get_json_response::<AbilitiesJson>(ability_url).await {
+  match get_json_response::<SpeciesJson>(ability_url).await {
     Ok(abilities_json) => {
       let first_english_flavor_text_entry = abilities_json.flavor_text_entries
         .iter()
-        .find(|flavor_text_entry| { flavor_text_entry.language.name == "en" });
+        .find(|flavor_text_entry| { flavor_text_entry.language.name == "en" && flavor_text_entry.version.name == "emerald" });
 
       match first_english_flavor_text_entry {
         Some(flavor_text_entry) => Ok(flavor_text_entry.flavor_text.clone()),

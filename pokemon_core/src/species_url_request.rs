@@ -3,21 +3,16 @@ use url;
 use crate::json_request::get_json_response;
 
 #[derive(Deserialize)]
-struct PokemonAbility {
+struct Species {
     url: String
 }
 
 #[derive(Deserialize)]
-struct PokemonAbilityItem {
-    ability: PokemonAbility
-}
-
-#[derive(Deserialize)]
 struct PokemonJson {
-    abilities: Vec<PokemonAbilityItem>
+    species: Species
 }
 
-pub async fn get_pokemon_ability_urls(pokemon_name: &str) -> Result<Vec<String>, ()> {
+pub async fn get_pokemon_species_url(pokemon_name: &str) -> Result<String, ()> {
 
     let api_base_url = url::Url::parse("https://pokeapi.co/api/v2/pokemon/").unwrap();
 
@@ -30,12 +25,7 @@ pub async fn get_pokemon_ability_urls(pokemon_name: &str) -> Result<Vec<String>,
     };
 
     match get_json_response::<PokemonJson>(&api_url).await {
-        Ok(pokemon_json) => {
-            Ok(pokemon_json.abilities
-                .iter()
-                .map(|ability_item| { ability_item.ability.url.clone() })
-                .collect())
-        },
+        Ok(pokemon_json) => Ok(pokemon_json.species.url),
         Err(_) => Err(())
     }
 }

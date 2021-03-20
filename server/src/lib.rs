@@ -9,7 +9,7 @@ pub struct PokemonResponse {
 }
 
 #[get("/pokemon/{name}")]
-async fn pokemon(info: web::Path<(String)>) -> Result<web::Json<PokemonResponse>> {
+async fn pokemon(info: web::Path<String>) -> Result<web::Json<PokemonResponse>> {
     let pokemon_name = &info.0;
     Ok(web::Json(PokemonResponse {
         name: String::from(pokemon_name),

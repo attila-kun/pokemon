@@ -2,6 +2,9 @@ use actix_web::{test, App};
 use server::{config, PokemonResponse};
 
 #[actix_rt::test]
+// Test is ignored because it hits the real Shakespearean translator API. If called too many times, then the API's rate limiting
+// would kick in and the computer running the app would not be able to use the translation API for a certain period.
+#[ignore]
 async fn test_pokemon_found() {
     let mut app = test::init_service(App::new().configure(config)).await;
     let request = test::TestRequest::with_uri("/pokemon/pikachu").to_request();

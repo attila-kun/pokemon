@@ -1,4 +1,4 @@
-use crate::json_request::get_json_response;
+use crate::json_request::{JsonRequest};
 use serde::{Deserialize};
 
 #[derive(Deserialize)]
@@ -23,9 +23,9 @@ struct SpeciesJson {
   flavor_text_entries: Vec<FlavorTextEntry>
 }
 
-pub async fn get_species_description(specis_url: &str) -> Result<String, ()> {
+pub async fn get_species_description<R: JsonRequest>(specis_url: &str) -> Result<String, ()> {
 
-  match get_json_response::<SpeciesJson>(specis_url).await {
+  match R::get_json_response::<SpeciesJson>(specis_url).await {
     Ok(species_json) => {
       let first_english_flavor_text_entry = species_json.flavor_text_entries
         .iter()

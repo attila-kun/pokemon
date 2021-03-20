@@ -1,6 +1,6 @@
 use serde::{Deserialize};
 use url;
-use crate::json_request::get_json_response;
+use crate::json_request::{JsonRequest};
 
 #[derive(Deserialize)]
 struct Species {
@@ -12,7 +12,7 @@ struct PokemonJson {
     species: Species
 }
 
-pub async fn get_pokemon_species_url(pokemon_name: &str) -> Result<String, ()> {
+pub async fn get_pokemon_species_url<R: JsonRequest>(pokemon_name: &str) -> Result<String, ()> {
 
     let api_base_url = url::Url::parse("https://pokeapi.co/api/v2/pokemon/").unwrap();
 
@@ -24,7 +24,7 @@ pub async fn get_pokemon_species_url(pokemon_name: &str) -> Result<String, ()> {
         }
     };
 
-    match get_json_response::<PokemonJson>(&api_url).await {
+    match R::get_json_response::<PokemonJson>(&api_url).await {
         Ok(pokemon_json) => Ok(pokemon_json.species.url),
         Err(_) => Err(())
     }

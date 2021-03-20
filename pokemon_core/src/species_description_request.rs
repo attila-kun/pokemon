@@ -23,9 +23,9 @@ struct SpeciesJson {
   flavor_text_entries: Vec<FlavorTextEntry>
 }
 
-pub async fn get_species_description<R: JsonRequest>(specis_url: &str) -> Result<String, ()> {
+pub async fn get_species_description<R: JsonRequest>(species_url: &str) -> Result<String, ()> {
 
-  match R::get_json_response::<SpeciesJson>(specis_url).await {
+  match R::get_json_response::<SpeciesJson>(species_url).await {
     Ok(species_json) => {
       let first_english_flavor_text_entry = species_json.flavor_text_entries
         .iter()
@@ -41,17 +41,14 @@ pub async fn get_species_description<R: JsonRequest>(specis_url: &str) -> Result
 }
 
 mod tests {
-  use crate::json_request::JsonRequest;
   use super::*;
   use async_trait::async_trait;
-  use std::borrow::Cow;
-  use url;
 
   struct MockJsonRequest;
 
   #[async_trait(?Send)]
   impl JsonRequest for MockJsonRequest {
-      async fn get_json_response<T: serde::de::DeserializeOwned>(request_url: &str) -> Result<T, ()> {
+      async fn get_json_response<T: serde::de::DeserializeOwned>(_request_url: &str) -> Result<T, ()> {
           let json_text = "
           {
             \"flavor_text_entries\": [
@@ -100,7 +97,7 @@ mod tests {
 
   #[async_trait(?Send)]
   impl JsonRequest for MockFailedJsonRequest {
-      async fn get_json_response<T: serde::de::DeserializeOwned>(request_url: &str) -> Result<T, ()> {
+      async fn get_json_response<T: serde::de::DeserializeOwned>(_request_url: &str) -> Result<T, ()> {
           Err(())
       }
   }

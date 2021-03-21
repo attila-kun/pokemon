@@ -1,4 +1,4 @@
-use crate::json_request::{JsonRequest};
+use crate::json_request::{self, JsonRequest, JsonErrorReason};
 use serde::{Deserialize};
 
 #[derive(Deserialize)]
@@ -23,7 +23,7 @@ struct SpeciesJson {
   flavor_text_entries: Vec<FlavorTextEntry>
 }
 
-pub async fn get_species_description<R: JsonRequest>(species_url: &str) -> Result<String, ()> {
+pub async fn get_species_description<R: JsonRequest>(species_url: &str) -> Result<String, JsonErrorReason> {
 
   match R::get_json_response::<SpeciesJson>(species_url).await {
     Ok(species_json) => {
@@ -33,10 +33,10 @@ pub async fn get_species_description<R: JsonRequest>(species_url: &str) -> Resul
 
       match first_english_flavor_text_entry {
         Some(flavor_text_entry) => Ok(flavor_text_entry.flavor_text.clone()),
-        None => Err(())
+        None => Err(JsonErrorReason::Unknown)
       }
     },
-    Err(_) => Err(())
+    Err(error) => Err(error)
   }
 }
 
@@ -49,7 +49,7 @@ mod tests {
 
   #[async_trait(?Send)]
   impl JsonRequest for MockJsonRequest {
-      async fn get_json_response<T: serde::de::DeserializeOwned>(_request_url: &str) -> Result<T, ()> {
+      async fn get_json_response<T: serde::de::DeserializeOwned>(_request_url: &str) -> Result<T, JsonErrorReason> {
           let json_text = "
           {
             \"flavor_text_entries\": [

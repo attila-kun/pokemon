@@ -1,5 +1,5 @@
 use actix_web::{Result, get, web};
-use actix_web::error::ErrorInternalServerError;
+use actix_web::error::{ErrorInternalServerError, ErrorNotFound};
 use pokemon_core::get_shakespearean_description;
 use serde::{Serialize, Deserialize};
 
@@ -20,6 +20,7 @@ async fn pokemon(info: web::Path<String>) -> Result<web::Json<PokemonResponse>> 
                 description: description
             }
         )),
+        Err(pokemon_core::ErrorReason::NotFound) => Err(ErrorNotFound("Pokemon not found.")),
         Err(_) => Err(ErrorInternalServerError("Error while generating Shakespearean description."))
     }
 

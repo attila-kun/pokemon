@@ -23,5 +23,5 @@ async fn test_index_pokemon_not_found() {
     let request = test::TestRequest::with_uri("/pokemon/rocinante").to_request();
     let response = test::call_service(&mut app, request).await;
 
-    assert!(response.status().is_server_error());
+    assert!(response.status().is_client_error());
 }

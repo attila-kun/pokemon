@@ -1,4 +1,4 @@
-use crate::{json_request::{JsonRequest}};
+use crate::{json_request::{JsonErrorReason, JsonRequest}};
 use regex::Regex;
 use serde::{Deserialize};
 
@@ -17,7 +17,7 @@ fn replace_whitespace_with_space(text: &str) -> String {
   re.replace_all(text, " ").to_string()
 }
 
-pub async fn get_shakespearean_translation<R: JsonRequest>(text: &str) -> Result<String, ()> {
+pub async fn get_shakespearean_translation<R: JsonRequest>(text: &str) -> Result<String, JsonErrorReason> {
 
   let mut api_base_url = url::Url::parse("https://api.funtranslations.com/translate/shakespeare.json").unwrap();
   {
@@ -27,7 +27,7 @@ pub async fn get_shakespearean_translation<R: JsonRequest>(text: &str) -> Result
 
   match R::get_json_response::<TranslationJson>(&api_base_url.to_string()).await {
     Ok(translation_json) => Ok(translation_json.contents.translated),
-    Err(_) => Err(())
+    Err(error) => Err(error)
   }
 }
 
@@ -42,7 +42,7 @@ struct MockJsonRequest;
 
 #[async_trait(?Send)]
 impl JsonRequest for MockJsonRequest {
-    async fn get_json_response<T: serde::de::DeserializeOwned>(request_url: &str) -> Result<T, ()> {
+    async fn get_json_response<T: serde::de::DeserializeOwned>(request_url: &str) -> Result<T, json_request::JsonErrorReason> {
         let json_text = "{
             \"success\": {
                 \"total\": 1

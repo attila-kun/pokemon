@@ -1,6 +1,6 @@
 use serde::{Deserialize};
 use url;
-use crate::json_request::{JsonRequest};
+use crate::json_request::{JsonRequest, JsonErrorReason};
 
 #[derive(Deserialize)]
 struct Species {
@@ -12,7 +12,7 @@ struct PokemonJson {
     species: Species
 }
 
-pub async fn get_pokemon_species_url<R: JsonRequest>(pokemon_name: &str) -> Result<String, ()> {
+pub async fn get_pokemon_species_url<R: JsonRequest>(pokemon_name: &str) -> Result<String, JsonErrorReason> {
 
     let api_base_url = url::Url::parse("https://pokeapi.co/api/v2/pokemon/").unwrap();
 
@@ -20,13 +20,13 @@ pub async fn get_pokemon_species_url<R: JsonRequest>(pokemon_name: &str) -> Resu
         Ok(url) => url.to_string(),
         Err(_) => {
             eprint!("Error creating API URL for Pokemon: {}", pokemon_name);
-            return Err(());
+            return Err(JsonErrorReason::Unknown);
         }
     };
 
     match R::get_json_response::<PokemonJson>(&api_url).await {
         Ok(pokemon_json) => Ok(pokemon_json.species.url),
-        Err(_) => Err(())
+        Err(error) => Err(error)
     }
 }
 
@@ -39,7 +39,7 @@ mod tests {
 
     #[async_trait(?Send)]
     impl JsonRequest for MockJsonRequest {
-        async fn get_json_response<T: serde::de::DeserializeOwned>(_request_url: &str) -> Result<T, ()> {
+        async fn get_json_response<T: serde::de::DeserializeOwned>(_request_url: &str) -> Result<T, json_request::JsonErrorReason> {
             let json_text = "
             {
                 \"species\": {

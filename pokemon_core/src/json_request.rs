@@ -4,7 +4,7 @@ use serde_json;
 
 #[async_trait(?Send)]
 pub trait JsonRequest {
-    async fn get_json_response<T: serde::de::DeserializeOwned>(url: &str) -> Result<T, ()>;
+    async fn get_json_response<T: serde::de::DeserializeOwned>(url: &str) -> Result<T, JsonErrorReason>;
 }
 
 pub struct NetworkJsonRequest;
@@ -12,7 +12,7 @@ pub struct NetworkJsonRequest;
 #[async_trait(?Send)]
 impl JsonRequest for NetworkJsonRequest {
     // Performs a GET request against the provided URL and parses the result into the provided type argument T.
-    async fn get_json_response<T: serde::de::DeserializeOwned>(url: &str) -> Result<T, ()> {
+    async fn get_json_response<T: serde::de::DeserializeOwned>(url: &str) -> Result<T, JsonErrorReason> {
 
         let client = Client::default();
         let initial_response = client.get(url)
@@ -24,7 +24,7 @@ impl JsonRequest for NetworkJsonRequest {
             Ok(mut response) => response.body().await,
             Err(_) => {
                 eprintln!("Error requesting URL: {}", url);
-                return Err(());
+                return Err(JsonErrorReason::Unknown);
             }
         };
 
@@ -32,7 +32,7 @@ impl JsonRequest for NetworkJsonRequest {
             Ok(body_response_bytes) => String::from_utf8(body_response_bytes.to_vec()),
             Err(_) => {
                 eprintln!("Error while receiving body for URL: {}", url);
-                return Err(());
+                return Err(JsonErrorReason::Unknown);
             }
         };
 
@@ -40,7 +40,7 @@ impl JsonRequest for NetworkJsonRequest {
             Ok(body_utf8_string) => (body_utf8_string.clone(), serde_json::from_str(&body_utf8_string)),
             Err(_) => {
                 eprintln!("Error while parsing body into UTF8 string for URL: {}", url);
-                return Err(());
+                return Err(JsonErrorReason::Unknown);
             }
         };
 
@@ -48,10 +48,15 @@ impl JsonRequest for NetworkJsonRequest {
             Ok(pokemon_json) => Ok(pokemon_json),
             Err(error) => {
                 eprintln!("Error while parsing UTF8 string into JSON for URL: {}.\n\tError: {}.\n\tBody string: {}", url, error.to_string(), body_utf8_string);
-                return Err(());
+                return Err(JsonErrorReason::BadBody(body_utf8_string));
             }
         }
     }
+}
+
+pub enum JsonErrorReason {
+    BadBody(String),
+    Unknown
 }
 
 pub mod test_helper {
@@ -60,8 +65,8 @@ pub mod test_helper {
 
     #[async_trait(?Send)]
     impl JsonRequest for MockFailedJsonRequest {
-        async fn get_json_response<T: serde::de::DeserializeOwned>(_request_url: &str) -> Result<T, ()> {
-            Err(()) // useful for testing the behaviour of services whose network request fails
+        async fn get_json_response<T: serde::de::DeserializeOwned>(_request_url: &str) -> Result<T, JsonErrorReason> {
+            Err(JsonErrorReason::Unknown) // useful for testing the behaviour of services whose network request fails
         }
     }
 }

@@ -1,4 +1,4 @@
-use crate::json_request::{self, JsonRequest, JsonErrorReason};
+use crate::json_request::{JsonRequest, JsonErrorReason};
 use serde::{Deserialize};
 
 #[derive(Deserialize)]
@@ -43,7 +43,6 @@ pub async fn get_species_description<R: JsonRequest>(species_url: &str) -> Resul
 mod tests {
   use super::*;
   use async_trait::async_trait;
-  use crate::json_request;
 
   struct MockJsonRequest;
 

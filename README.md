@@ -23,10 +23,17 @@ The project was developed with Rust version 1.50.0 (stable) on Ubuntu 18.04.5 LT
 
 The test suite can be run via: `cargo test`. This will run all tests except for one integration test (`test_pokemon_found`). This test is ignored by default because it hits the real [Shakespearean translation API](https://funtranslations.com/api/shakespeare). Doing this too many times might rate limit your computer, so you might want to do it sparingly. If you do decide to run this integration test, you can do so via `cargo test -- --ignored`.
 
+# Architecture
+
+The project is broken into two crates:
+
+1. `pokemon_core`: This contains the core logic of talking to the API endpoints. The crate is unaware that it is being accessed via a web interface. Having this as a separate crate makes sense because it could be included in an other project with a different, for example command line interface.
+2. `server`: This crate contains the entry point of the application and starts an HTTP server that talks to `pokemon_core`.
+
 # Areas of improvement
 
-1. The returned HTTP status codes should be more sophisticated. Right now either status code 200 is returned in case of a successful response, or 500 is returned in case something went wrong. For example when the Pokemon does not exist, status code 404 could be returned. Similar improvements can be made to the error messages returned to the user: instead of using a generic error message, we could display a more specific reason.
-2. The project uses hard-coded URLs to make requests towards the API endpoints. This should be passed in as configuration instead. This might be useful for integration testing too: if the API endpoints are configurable, then we could spin up a test server which would mock the behaviour of the real API endpoints with the benefit of not having to worry about rate limiting.
+1. If the Pokemon can not be found, HTTP status code 404 is returned along with the message "Pokemon not found.". All other error cases are handled by returning status code 500 along with a generic error message. This could be improved by adding more specific error messages to certain cases. For example, if the request fails due to rate limiting, this should be communicated to the user of the API, so they will know not to retry unnecessarily.
+2. The project uses hard-coded URLs to make requests towards the API endpoints. This should be passed in as configuration instead. This would be useful for integration testing too: if the API endpoints were configurable, then we could spin up a test server which would mock the behaviour of the real API endpoints with the benefit of not having to worry about rate limiting.
 3. `.clone()` was used at a couple of places to satisfy the borrow checker. Given more time it might be possible to do away with these.
 4. In a production application, one would use a logging library to log errors or informational messages into a file.
 5. The Dockerfile could be improved such that pulling the dependencies is done in a separate layer from the layer where the application is built. This would ensure that dependencies would not get rebuilt if only the application code changes, thereby making subsequent Docker image builds faster.

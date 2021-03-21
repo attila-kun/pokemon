@@ -19,6 +19,8 @@ The project was developed with Rust version 1.50.0 (stable) on Ubuntu 18.04.5 LT
 3. `sudo docker build -t pokemon -f ./Dockerfile .`
 4. `sudo docker run -p 5000:5000 pokemon:latest`
 
+Once the application is running, you can invoke it via: `http http://localhost:5000/pokemon/charizard`
+
 # Tests
 
 The test suite can be run via: `cargo test`. This will run all tests except for one integration test (`test_pokemon_found`). This test is ignored by default because it hits the real [Shakespearean translation API](https://funtranslations.com/api/shakespeare). Doing this too many times might rate limit your computer, so you might want to do it sparingly. If you do decide to run this integration test, you can do so via `cargo test -- --ignored`.
